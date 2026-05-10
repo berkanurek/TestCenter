@@ -1,5 +1,8 @@
 export type MaterialType = "quiz" | "document";
-export type QuestionType = "multiple_choice" | "open_ended";
+// "single" = radio (one correct); "multiple" = checkboxes (≥1 correct)
+// "multiple_choice" kept for backward compatibility with existing rows
+export type QuestionType = "single" | "multiple" | "open_ended" | "multiple_choice";
+export type AccessLevel = "public" | "link" | "private";
 
 export interface User {
   id: string;
@@ -18,6 +21,11 @@ export interface Material {
   category: string | null;
   time_limit_minutes: number | null;
   passing_score: number | null;
+  // Booleans are nullable so the UI keeps working even before the SQL
+  // migrations for these columns have been applied to the materials table.
+  instant_feedback: boolean | null;
+  mastery_mode: boolean | null;
+  access_level: AccessLevel | null;
   created_at: string;
 }
 
@@ -26,6 +34,7 @@ export interface Question {
   material_id: string;
   question_text: string;
   type: QuestionType;
+  image_url: string | null;
 }
 
 export interface Option {

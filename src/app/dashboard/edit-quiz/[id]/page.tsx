@@ -40,7 +40,7 @@ export default async function EditQuizPage({ params }: PageProps) {
   const { data: questions } = await supabase
     .from("questions")
     .select(
-      "id, material_id, question_text, type, options(id, question_id, option_text, is_correct)"
+      "id, material_id, question_text, type, image_url, options(id, question_id, option_text, is_correct)"
     )
     .eq("material_id", id)
     .returns<QuestionWithOptions[]>();

@@ -26,6 +26,9 @@ const INITIAL_SETUP: QuizSetupData = {
 const INITIAL_SETTINGS: QuizSettings = {
   time_limit_minutes: null,
   passing_score: null,
+  instant_feedback: false,
+  mastery_mode: false,
+  access_level: "public",
 };
 
 type EditorStep = "setup" | "edit";
@@ -121,6 +124,9 @@ export default function CreateQuizPage() {
         file_url: null,
         time_limit_minutes: settings.time_limit_minutes,
         passing_score: settings.passing_score,
+        instant_feedback: settings.instant_feedback,
+        mastery_mode: settings.mastery_mode,
+        access_level: settings.access_level,
       })
       .select("id")
       .single();
@@ -137,6 +143,7 @@ export default function CreateQuizPage() {
       material_id: material.id,
       question_text: question.question_text.trim(),
       type: question.type,
+      image_url: question.image_url ?? null,
     }));
 
     const { data: insertedQuestions, error: questionsError } = await supabase
@@ -153,7 +160,7 @@ export default function CreateQuizPage() {
     }
 
     const optionsPayload = questions.flatMap((question, index) => {
-      if (question.type !== "multiple_choice") return [];
+      if (question.type === "open_ended") return [];
       const insertedQuestion = insertedQuestions[index];
       if (!insertedQuestion) return [];
       return question.options
@@ -306,7 +313,7 @@ function validateDraft(
       return `${label} is missing its prompt.`;
     }
 
-    if (question.type !== "multiple_choice") continue;
+    if (question.type === "open_ended") continue;
 
     const filledOptions = question.options.filter(
       (option) => option.option_text.trim().length > 0
@@ -319,10 +326,10 @@ function validateDraft(
       (option) => option.is_correct
     ).length;
     if (correctCount === 0) {
-      return `${label} must have a correct option marked.`;
+      return `${label} must have at least one correct option marked.`;
     }
-    if (correctCount > 1) {
-      return `${label} can only have one correct option.`;
+    if (question.type !== "multiple" && correctCount > 1) {
+      return `${label} can only have one correct option for single-choice questions.`;
     }
   }
 

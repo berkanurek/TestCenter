@@ -1,11 +1,21 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #37352f;
   --surface: #f7f7f7;
   --canvas: #f9f9f9;
   --border: #ebebeb;
+}
+
+.dark {
+  --background: #18181b;
+  --foreground: #f4f4f5;
+  --surface: #27272a;
+  --canvas: #0a0a0a;
+  --border: #2f2f33;
 }
 
 @theme inline {
@@ -17,10 +27,20 @@
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
+html {
+  background: var(--canvas);
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
 body {
   background: var(--canvas);
   color: var(--foreground);
   font-family: var(--font-sans);
+  transition: background-color 0.18s ease;
 }
 
 .material-symbols-outlined {

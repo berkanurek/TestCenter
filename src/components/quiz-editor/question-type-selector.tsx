@@ -6,12 +6,22 @@ import type { QuestionType } from "@/types";
 
 import { Icon } from "./icon";
 
-const TYPE_META: Record<QuestionType, { label: string; icon: string }> = {
-  multiple_choice: { label: "Multiple Choice", icon: "list" },
+type DisplayType = "single" | "multiple" | "open_ended";
+
+const TYPE_META: Record<DisplayType, { label: string; icon: string }> = {
+  single: { label: "Single Choice", icon: "radio_button_checked" },
+  multiple: { label: "Multiple Choice", icon: "check_box" },
   open_ended: { label: "Open-ended", icon: "subject" },
 };
 
-const TYPE_ORDER: QuestionType[] = ["multiple_choice", "open_ended"];
+const TYPE_ORDER: DisplayType[] = ["single", "multiple", "open_ended"];
+
+function toDisplayType(type: QuestionType): DisplayType {
+  if (type === "multiple_choice") return "single";
+  if (type === "multiple") return "multiple";
+  if (type === "open_ended") return "open_ended";
+  return "single";
+}
 
 type QuestionTypeSelectorProps = {
   value: QuestionType;
@@ -47,7 +57,8 @@ export function QuestionTypeSelector({
     };
   }, [open]);
 
-  const current = TYPE_META[value];
+  const displayType = toDisplayType(value);
+  const current = TYPE_META[displayType];
 
   return (
     <div className="relative" ref={containerRef}>
@@ -66,11 +77,11 @@ export function QuestionTypeSelector({
       {open ? (
         <div
           role="listbox"
-          className="absolute right-0 top-full mt-1 min-w-[180px] bg-background border border-border rounded shadow-sm z-30 overflow-hidden"
+          className="absolute right-0 top-full mt-1 min-w-[196px] bg-background border border-border rounded shadow-sm z-30 overflow-hidden"
         >
           {TYPE_ORDER.map((type) => {
             const meta = TYPE_META[type];
-            const isSelected = type === value;
+            const isSelected = type === displayType;
             return (
               <button
                 key={type}

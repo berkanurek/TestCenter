@@ -30,18 +30,36 @@ export function QuestionCard({
   }
 
   function handleTypeChange(nextType: QuestionType) {
-    if (nextType === question.type) return;
+    const currentDisplay =
+      question.type === "multiple_choice" ? "single" : question.type;
+    if (nextType === currentDisplay) return;
 
-    if (nextType === "multiple_choice") {
-      const options =
-        question.options.length > 0
-          ? question.options
-          : [createDraftOption(), createDraftOption()];
-      patch({ type: nextType, options });
+    if (nextType === "open_ended") {
+      patch({ type: nextType, options: [] });
       return;
     }
 
-    patch({ type: nextType, options: [] });
+    const options =
+      question.options.length > 0
+        ? question.options
+        : [createDraftOption(), createDraftOption()];
+
+    if (nextType === "single") {
+      // Ensure only the first correct option stays correct
+      let foundCorrect = false;
+      const normalizedOptions = options.map((opt) => {
+        if (opt.is_correct && !foundCorrect) {
+          foundCorrect = true;
+          return opt;
+        }
+        return { ...opt, is_correct: false };
+      });
+      patch({ type: nextType, options: normalizedOptions });
+      return;
+    }
+
+    // "multiple": keep all existing correctness values
+    patch({ type: nextType, options });
   }
 
   function handleOptionChange(optionId: string, next: Partial<DraftOption>) {
@@ -53,12 +71,24 @@ export function QuestionCard({
   }
 
   function handleCorrectChange(optionId: string) {
-    patch({
-      options: question.options.map((option) => ({
-        ...option,
-        is_correct: option.id === optionId,
-      })),
-    });
+    if (question.type === "multiple") {
+      // Toggle for multi-select
+      patch({
+        options: question.options.map((option) =>
+          option.id === optionId
+            ? { ...option, is_correct: !option.is_correct }
+            : option
+        ),
+      });
+    } else {
+      // Single correct for radio
+      patch({
+        options: question.options.map((option) => ({
+          ...option,
+          is_correct: option.id === optionId,
+        })),
+      });
+    }
   }
 
   function handleAddOption() {
@@ -71,6 +101,16 @@ export function QuestionCard({
       options: question.options.filter((option) => option.id !== optionId),
     });
   }
+
+  const isChoiceType =
+    question.type === "single" ||
+    question.type === "multiple" ||
+    question.type === "multiple_choice";
+
+  const placeholder =
+    question.type === "open_ended"
+      ? "Explain the process of photosynthesis."
+      : "What is the capital of France?";
 
   return (
     <article className="p-10 bg-background border border-border rounded-lg group transition-all hover:border-foreground/30">
@@ -87,25 +127,30 @@ export function QuestionCard({
         />
       </div>
 
-      <div className="mb-10">
+      <div className="mb-6">
         <input
           type="text"
           spellCheck={false}
           className="invisible-input text-[24px] font-semibold leading-[1.4] text-foreground py-2 transition-all"
-          placeholder={
-            question.type === "multiple_choice"
-              ? "What is the capital of France?"
-              : "Explain the process of photosynthesis."
-          }
+          placeholder={placeholder}
           value={question.question_text}
           onChange={(event) => patch({ question_text: event.target.value })}
           aria-label={`Question ${index + 1} text`}
         />
       </div>
 
-      {question.type === "multiple_choice" ? (
-        <MultipleChoiceOptions
+      {/* Image URL field */}
+      <div className="mb-8">
+        <ImageUrlField
+          value={question.image_url}
+          onChange={(url) => patch({ image_url: url })}
+        />
+      </div>
+
+      {isChoiceType ? (
+        <ChoiceOptions
           options={question.options}
+          isMultiple={question.type === "multiple"}
           onOptionChange={handleOptionChange}
           onCorrectChange={handleCorrectChange}
           onAddOption={handleAddOption}
@@ -139,27 +184,84 @@ export function QuestionCard({
   );
 }
 
-type MultipleChoiceOptionsProps = {
+// ── Image URL field ───────────────────────────────────────────────────────────
+
+type ImageUrlFieldProps = {
+  value: string | null;
+  onChange: (url: string | null) => void;
+};
+
+function ImageUrlField({ value, onChange }: ImageUrlFieldProps) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-foreground/50 mb-1.5">
+        Question image — URL (optional)
+      </label>
+      <input
+        type="url"
+        spellCheck={false}
+        placeholder="https://example.com/image.png"
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value.trim() || null)}
+        className="w-full rounded border border-transparent bg-transparent px-0 py-1 text-sm text-foreground placeholder:text-foreground/30 outline-none transition-colors hover:border-transparent focus:border-transparent"
+        style={{ borderBottom: "1px solid" }}
+      />
+      {value ? (
+        <div className="mt-3 relative group/img">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={value}
+            alt="Question image preview"
+            className="rounded border border-border max-h-48 w-full object-contain bg-surface"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            aria-label="Remove image"
+            className="absolute top-2 right-2 opacity-0 group-hover/img:opacity-100 transition-opacity p-1 bg-background border border-border rounded hover:bg-surface"
+          >
+            <Icon name="close" size={14} className="text-foreground/70" />
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+// ── Choice options ─────────────────────────────────────────────────────────────
+
+type ChoiceOptionsProps = {
   options: DraftOption[];
+  isMultiple: boolean;
   onOptionChange: (optionId: string, next: Partial<DraftOption>) => void;
   onCorrectChange: (optionId: string) => void;
   onAddOption: () => void;
   onRemoveOption: (optionId: string) => void;
 };
 
-function MultipleChoiceOptions({
+function ChoiceOptions({
   options,
+  isMultiple,
   onOptionChange,
   onCorrectChange,
   onAddOption,
   onRemoveOption,
-}: MultipleChoiceOptionsProps) {
+}: ChoiceOptionsProps) {
   return (
     <div className="flex flex-col gap-4">
+      {isMultiple ? (
+        <p className="text-xs text-foreground/50 -mt-2">
+          Check all options that are correct.
+        </p>
+      ) : null}
       {options.map((option) => (
         <OptionRow
           key={option.id}
           option={option}
+          isMultiple={isMultiple}
           canRemove={options.length > 1}
           onTextChange={(text) =>
             onOptionChange(option.id, { option_text: text })
@@ -182,6 +284,7 @@ function MultipleChoiceOptions({
 
 type OptionRowProps = {
   option: DraftOption;
+  isMultiple: boolean;
   canRemove: boolean;
   onTextChange: (text: string) => void;
   onMarkCorrect: () => void;
@@ -190,6 +293,7 @@ type OptionRowProps = {
 
 function OptionRow({
   option,
+  isMultiple,
   canRemove,
   onTextChange,
   onMarkCorrect,
@@ -201,15 +305,21 @@ function OptionRow({
         type="button"
         onClick={onMarkCorrect}
         aria-label={
-          option.is_correct
-            ? "Correct answer"
-            : "Mark as correct answer"
+          option.is_correct ? "Correct answer" : "Mark as correct answer"
         }
         aria-pressed={option.is_correct}
-        className="w-4 h-4 border border-border rounded-full flex items-center justify-center cursor-pointer hover:border-foreground transition-colors flex-shrink-0"
+        className={`flex items-center justify-center cursor-pointer hover:border-foreground transition-colors flex-shrink-0 ${
+          isMultiple
+            ? "w-4 h-4 border border-border rounded flex-shrink-0"
+            : "w-4 h-4 border border-border rounded-full flex-shrink-0"
+        }`}
       >
         {option.is_correct ? (
-          <span className="w-2 h-2 bg-foreground rounded-full" />
+          isMultiple ? (
+            <span className="w-2.5 h-2.5 bg-foreground rounded-sm" />
+          ) : (
+            <span className="w-2 h-2 bg-foreground rounded-full" />
+          )
         ) : null}
       </button>
       <input

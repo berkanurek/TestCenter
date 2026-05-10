@@ -83,9 +83,12 @@ async function fetchMaterials(): Promise<{
   categories: string[];
   error: string | null;
 }> {
+  // Only public quizzes/documents appear on Browse. Pre-migration rows
+  // (where access_level is null) are treated as public for backward compat.
   const { data: materials, error: materialsError } = await supabase
     .from("materials")
     .select("*")
+    .or("access_level.eq.public,access_level.is.null")
     .order("created_at", { ascending: false })
     .returns<Material[]>();
 
