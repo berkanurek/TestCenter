@@ -1,0 +1,37 @@
+# Role
+You are an expert full-stack developer specializing in Next.js (App Router), TypeScript, Tailwind CSS, and Supabase.
+
+# Project Overview
+Name: TestCenter
+Type: Educational Knowledge-Sharing Platform (similar to primat.cz)
+Language: English
+Core Features: Users can share study materials (PDFs, notes) and create/take interactive quizzes. Any user can act as both a creator and a student. No premium tiers for now.
+
+# Tech Stack
+- Framework: Next.js 14+ (App Router)
+- Language: TypeScript
+- Styling: Tailwind CSS
+- Database & Auth & Storage: Supabase
+- Font: Inter (strictly enforced)
+
+# Design System Guidelines (Strictly Follow)
+- Aesthetic: Digital essentialism, high-utility minimalism, monochrome.
+- Colors: White canvas (#FFFFFF), subtle surfaces (#F7F7F7), borders (#EBEBEB), primary text (#37352F). No heavy drop shadows.
+- Shapes: Soft 4px rounding for buttons and cards.
+- Inputs: Invisible by default, showing only a 1px border on hover/focus.
+- Avoid unnecessary decorative elements. Maximize readability.
+
+# Coding Standards
+- Use TypeScript for all files. Define strict interfaces/types for database models.
+- Favor functional React components and React Hooks.
+- Keep components small and modular. Extract reusable UI elements.
+- Use early returns to avoid deep nesting.
+- Prioritize clear, descriptive variable and function names over comments.
+- Handle loading and error states gracefully in all data fetching processes.
+
+# Database Schema Context (Supabase)
+- `users`: id, email, full_name, created_at
+- `materials`: id, title, description, type (enum: 'quiz' | 'document'), user_id, file_url (if document), created_at
+- `questions`: id, material_id, question_text, type (enum: 'multiple_choice' | 'open_ended')
+- `options`: id, question_id, option_text, is_correct
+- `results`: id, user_id, material_id, score, total_questions, created_at
