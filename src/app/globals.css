@@ -4,6 +4,7 @@
   --background: #ffffff;
   --foreground: #37352f;
   --surface: #f7f7f7;
+  --canvas: #f9f9f9;
   --border: #ebebeb;
 }
 
@@ -11,12 +12,13 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
+  --color-canvas: var(--canvas);
   --color-border: var(--border);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
-  background: var(--background);
+  background: var(--canvas);
   color: var(--foreground);
   font-family: var(--font-sans);
 }
