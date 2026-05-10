@@ -36,24 +36,34 @@ function toSettings(material: Material): QuizSettings {
   return {
     time_limit_minutes: material.time_limit_minutes,
     passing_score: material.passing_score,
+    instant_feedback: material.instant_feedback ?? false,
+    mastery_mode: material.mastery_mode ?? false,
+    access_level: material.access_level ?? "public",
   };
 }
 
 function toDraftQuestions(existing: QuestionWithOptions[]): DraftQuestion[] {
   if (existing.length === 0) return [createDraftQuestion()];
-  return existing.map((q) => ({
-    id: q.id,
-    question_text: q.question_text,
-    type: q.type,
-    options:
-      q.type === "multiple_choice" && q.options.length > 0
-        ? q.options.map((o) => ({
-            id: o.id,
-            option_text: o.option_text,
-            is_correct: o.is_correct,
-          }))
-        : [createDraftOption(), createDraftOption()],
-  }));
+  return existing.map((q) => {
+    const isChoice =
+      q.type === "multiple_choice" ||
+      q.type === "single" ||
+      q.type === "multiple";
+    return {
+      id: q.id,
+      question_text: q.question_text,
+      type: q.type,
+      image_url: q.image_url ?? null,
+      options:
+        isChoice && q.options.length > 0
+          ? q.options.map((o) => ({
+              id: o.id,
+              option_text: o.option_text,
+              is_correct: o.is_correct,
+            }))
+          : [createDraftOption(), createDraftOption()],
+    };
+  });
 }
 
 export function EditQuizForm({ material, existingQuestions }: Props) {
@@ -141,6 +151,9 @@ export function EditQuizForm({ material, existingQuestions }: Props) {
         category: setupData.category.trim() || null,
         time_limit_minutes: settings.time_limit_minutes,
         passing_score: settings.passing_score,
+        instant_feedback: settings.instant_feedback,
+        mastery_mode: settings.mastery_mode,
+        access_level: settings.access_level,
       })
       .eq("id", material.id)
       .eq("user_id", userData.user.id); // ownership guard
@@ -168,6 +181,7 @@ export function EditQuizForm({ material, existingQuestions }: Props) {
       material_id: material.id,
       question_text: q.question_text.trim(),
       type: q.type,
+      image_url: q.image_url ?? null,
     }));
 
     const { data: insertedQuestions, error: questionsError } = await supabase
@@ -181,9 +195,9 @@ export function EditQuizForm({ material, existingQuestions }: Props) {
       return;
     }
 
-    // Step 4 — insert options for MC questions
+    // Step 4 — insert options for choice questions (single, multiple, multiple_choice)
     const optionsPayload = questions.flatMap((q, idx) => {
-      if (q.type !== "multiple_choice") return [];
+      if (q.type === "open_ended") return [];
       const inserted = insertedQuestions[idx];
       if (!inserted) return [];
       return q.options
@@ -319,12 +333,13 @@ function validateDraft(
     const q = questions[i];
     const label = `Question ${i + 1}`;
     if (!q.question_text.trim()) return `${label} is missing its prompt.`;
-    if (q.type !== "multiple_choice") continue;
+    if (q.type === "open_ended") continue;
     const filled = q.options.filter((o) => o.option_text.trim().length > 0);
     if (filled.length < 2) return `${label} needs at least two filled options.`;
     const correct = filled.filter((o) => o.is_correct).length;
-    if (correct === 0) return `${label} must have a correct option marked.`;
-    if (correct > 1) return `${label} can only have one correct option.`;
+    if (correct === 0) return `${label} must have at least one correct option marked.`;
+    if (q.type !== "multiple" && correct > 1)
+      return `${label} can only have one correct option for single-choice questions.`;
   }
 
   return null;

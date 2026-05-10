@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+
+import { ThemeScript } from "@/components/theme/theme-script";
+
 import "./globals.css";
 
 const inter = Inter({
@@ -77,8 +80,10 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${inter.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <head>
+        <ThemeScript />
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           rel="stylesheet"

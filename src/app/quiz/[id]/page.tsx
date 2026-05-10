@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { Material, Option, Question } from "@/types";
 
-import { QuizRunner } from "./quiz-runner";
+import { QuizGuard } from "./quiz-guard";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +68,7 @@ export default async function QuizPage({ params }: PageProps) {
   const { data: questions, error: questionsError } = await supabase
     .from("questions")
     .select(
-      "id, material_id, question_text, type, options(id, question_id, option_text, is_correct)"
+      "id, material_id, question_text, type, image_url, options(id, question_id, option_text, is_correct)"
     )
     .eq("material_id", id)
     .returns<QuestionWithOptions[]>();
@@ -99,7 +99,7 @@ export default async function QuizPage({ params }: PageProps) {
     );
   }
 
-  return <QuizRunner material={material} questions={questions} />;
+  return <QuizGuard material={material} questions={questions} />;
 }
 
 function EmptyShell({

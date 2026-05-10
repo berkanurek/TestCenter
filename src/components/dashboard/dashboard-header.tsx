@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { Icon } from "@/components/quiz-editor/icon";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
 const NAV_ITEMS = [
@@ -109,10 +110,11 @@ export function DashboardHeader() {
           New quiz
         </Link>
 
-        {/* Separator + avatar */}
+        {/* Separator + theme toggle + avatar */}
+        <div className="w-px h-5 bg-border mx-1" aria-hidden />
+        <ThemeToggle />
         {user ? (
           <>
-            <div className="w-px h-5 bg-border mx-1" aria-hidden />
             <div className="relative" ref={dropdownRef}>
               <button
                 type="button"
