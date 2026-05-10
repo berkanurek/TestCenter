@@ -2,6 +2,7 @@
   "name": "testcenter",
   "version": "0.1.0",
   "private": true,
+  "author": "berkanurek (https://github.com/berkanurek)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
