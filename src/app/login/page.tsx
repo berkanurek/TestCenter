@@ -1,18 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState, type FormEvent } from "react";
 
 import { FieldInput } from "@/components/ui/field-input";
 import { GoogleIcon } from "@/components/ui/google-icon";
 import { supabaseBrowser as supabase } from "@/lib/supabase-browser";
 
-export default function LoginPage() {
+const OAUTH_ERRORS: Record<string, string> = {
+  oauth_exchange_failed: "Google sign-in failed. Please try again.",
+  no_code: "The sign-in link was invalid. Please try again.",
+};
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const oauthError = searchParams.get("error");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(
+    oauthError
+      ? (OAUTH_ERRORS[oauthError] ?? "Something went wrong. Please try again.")
+      : null
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
@@ -51,8 +63,6 @@ export default function LoginPage() {
       setErrorMessage(error.message);
       setIsGoogleLoading(false);
     }
-    // If there's no error, the browser is redirecting to Google — leave the
-    // loading state as-is so the button stays disabled until navigation away.
   }
 
   return (
@@ -102,10 +112,7 @@ export default function LoginPage() {
           />
 
           {errorMessage ? (
-            <p
-              role="alert"
-              className="text-sm text-foreground"
-            >
+            <p role="alert" className="text-sm text-foreground">
               {errorMessage}
             </p>
           ) : null}
@@ -130,5 +137,14 @@ export default function LoginPage() {
         </p>
       </div>
     </main>
+  );
+}
+
+// useSearchParams() requires a Suspense boundary in the App Router.
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

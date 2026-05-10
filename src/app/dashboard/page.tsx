@@ -19,15 +19,15 @@ export default async function DashboardPage() {
   const { materials, categories, error } = await fetchMaterials();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen flex flex-col">
       <DashboardHeader />
 
-      <main className="flex-1 px-6 py-12 mx-auto w-full max-w-[1100px]">
-        <header className="mb-10">
-          <h1 className="text-[30px] font-semibold leading-[1.3] tracking-tight text-foreground">
+      <main className="flex-1 px-6 py-14 mx-auto w-full max-w-[1100px]">
+        <header className="mb-10 pb-8 border-b border-border">
+          <h1 className="text-[28px] font-bold leading-[1.3] tracking-tight text-foreground">
             Browse
           </h1>
-          <p className="mt-1 text-sm text-foreground/60">
+          <p className="mt-1.5 text-sm text-foreground/60">
             Quizzes and documents shared by the TestCenter community.
           </p>
         </header>
