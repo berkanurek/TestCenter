@@ -403,7 +403,7 @@ export function QuizRunner({ material, questions }: QuizRunnerProps) {
               <button
                 type="button"
                 onClick={handleMasteryNext}
-                disabled={!masteryRevealed || phase === "submitting"}
+                disabled={!masteryRevealed}
                 className="px-6 py-2.5 rounded text-sm font-medium bg-foreground text-background hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100"
               >
                 {isFinishingMove ? "Finish" : "Next"}
