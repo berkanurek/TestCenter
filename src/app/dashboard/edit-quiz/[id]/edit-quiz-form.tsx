@@ -107,6 +107,7 @@ export function EditQuizForm({ material, existingQuestions }: Props) {
         id: crypto.randomUUID(),
         question_text: src.question_text,
         type: src.type,
+        image_url: src.image_url ?? null,
         options: src.options.map((o) => ({
           ...createDraftOption(),
           option_text: o.option_text,

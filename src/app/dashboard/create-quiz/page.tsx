@@ -78,6 +78,7 @@ export default function CreateQuizPage() {
         id: crypto.randomUUID(),
         question_text: source.question_text,
         type: source.type,
+        image_url: source.image_url ?? null,
         options: source.options.map((option) => ({
           ...createDraftOption(),
           option_text: option.option_text,
